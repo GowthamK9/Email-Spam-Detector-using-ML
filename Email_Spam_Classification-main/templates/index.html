@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Spam Detector</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<style>
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Poppins', sans-serif;
+        background-image: url('https://upload.wikimedia.org/wikipedia/commons/4/4e/Gmail_Icon.png');
+        background-size: 150px;
+        background-repeat: no-repeat;
+        background-position: center 40px;
+        background-attachment: fixed;
+    }
+
+    .container {
+        margin-top: 100px;
+        max-width: 600px;
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
+        animation: fadeIn 3.0s ease-in-out;
+        border: 3px solid #007bff;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+        color: #ff6600;
+        text-align: center;
+        font-weight: 700;
+        animation: slideIn 1s ease-in-out;
+        font-size: 36px;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(-50px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    .form-control {
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 12px;
+        border: 2px solid #ff6600;
+        font-size: 16px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: border-color 0.3s ease-in-out;
+    }
+
+    .form-control:focus {
+        border-color: #ff9900;
+        box-shadow: 0 0 10px rgba(255, 153, 0, 0.6);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #ff6600, #ff9900);
+        border: none;
+        border-radius: 8px;
+        width: 100%;
+        font-weight: bold;
+        padding: 14px;
+        transition: all 0.3s ease-in-out;
+        font-size: 18px;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #ff9900, #ff6600);
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(255, 165, 0, 0.5);
+    }
+
+    .alert {
+        border-radius: 8px;
+        padding: 15px;
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        animation: fadeIn 0.8s ease-in-out;
+    }
+
+    .alert-danger {
+        background-color: #ff6666;
+        color: white;
+    }
+
+    .alert-success {
+        background-color: #66ff66;
+        color: white;
+    }
+
+    .alert-info {
+        background-color: #66ccff;
+        color: white;
+    }
+</style>
+
+<body>
+    <div class="container mt-5">
+        <h1>Drop your Mail</h1>
+        <form method="POST" action="{{ url_for('analyze_mail') }}">
+            <div class="form-group">
+                <label for="mail">Enter your mail content:</label>
+                <textarea class="form-control" id="mail" name="mail" rows="4" placeholder="Paste your email content here..."></textarea>
+            </div>
+            <div class="form-group">
+                <label for="url">Enter a URL to check:</label>
+                <input type="text" class="form-control" id="url" name="url" placeholder="Paste a URL here...">
+            </div>
+            <button type="submit" class="btn btn-primary">Analyze</button>
+        </form>
+
+        {% if classify is defined %}
+            <div class="mt-4">
+                {% if classify == 'Spam' %}
+                    <div class="alert alert-danger" role="alert">⚠️ This is a spam email!</div>
+                {% elif classify == 'Ham' %}
+                    <div class="alert alert-success" role="alert">✅ This is a safe email.</div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        {% if url_classify is defined %}
+            <div class="mt-4">
+                {% if url_classify == 'Spam' %}
+                    <div class="alert alert-danger" role="alert">⚠️ The URL is suspicious!</div>
+                {% elif url_classify == 'Ham' %}
+                    <div class="alert alert-success" role="alert">✅ The URL is safe.</div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <div class="mt-4" id="domain-info" style="display: none;">
+            <div class="alert alert-info" role="alert">Extracted Domain: <span id="extracted-domain"></span></div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $("#url").on("input", function() {
+                let url = $(this).val();
+                let domain = extractDomain(url);
+                if (domain) {
+                    $("#extracted-domain").text(domain);
+                    $("#domain-info").show();
+                } else {
+                    $("#domain-info").hide();
+                }
+
+                if (url.includes("bit.ly") || url.includes("tinyurl") || url.includes("goo.gl")) {
+                    $(this).css("border", "2px solid red");
+                } else {
+                    $(this).css("border", "");
+                }
+            });
+        });
+
+        function extractDomain(url) {
+            try {
+                let hostname = new URL(url).hostname;
+                return hostname.replace("www.", "");
+            } catch (e) {
+                return "";
+            }
+        }
+    </script>
+    
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
